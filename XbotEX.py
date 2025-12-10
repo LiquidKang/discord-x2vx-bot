@@ -15,7 +15,7 @@ intents.message_content = True  # 必須開啟，才能讀取訊息內容
 client = discord.Client(intents=intents)
 
 # Regex：找到 x.com/t... 連結
-x_url_pattern = re.compile(r"https?://(www\.)?x\.com/[\w\-/?=&%]+")
+x_url_pattern = re.compile(r"https?://(www\.)?x\.com/[\w\-/?=&%]+", re.IGNORECASE)
 
 @client.event
 async def on_ready():
@@ -27,10 +27,22 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    # 如果訊息已有 embed，則不處理
+    if message.embeds:
+        return
+
     # 搜尋訊息是否含有 x.com 連結
-    if x_url_pattern.search(message.content):
-        new_msg = x_url_pattern.sub(lambda m: m.group(0).replace("x.com", "vxtwitter.com"), message.content)
-        await message.channel.send(new_msg)
+    matches = x_url_pattern.findall(message.content)
+    if matches:
+        # 逐個替換 X.com 為 vxtwitter.com
+        def replace_x(match):
+            url = match.group(0)
+            return url.replace("x.com", "vxtwitter.com")
+        
+        new_msg = x_url_pattern.sub(replace_x, message.content)
+        
+        # 以 reply 的方式發送，避免重複生成預覽
+        await message.reply(new_msg, mention_author=False)
 
 # 啟動 Bot
 client.run(TOKEN)
