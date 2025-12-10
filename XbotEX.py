@@ -1,25 +1,24 @@
 import discord
 import re
+import os   # ← 你缺少這個，Railway 會直接爆掉
 
 TOKEN = os.getenv("TOKEN")
 
 intents = discord.Intents.default()
-intents.message_content = True  # 要讀取訊息必開
+intents.message_content = True  # 讀取訊息必須開啟
 client = discord.Client(intents=intents)
 
-# Regex：找到 X.com/t... 這種類型的連結
+# Regex：識別 X.com 的連結
 x_url_pattern = re.compile(r"https?://(www\.)?x\.com/[\w\-/?=&%]+")
 
 @client.event
 async def on_message(message):
-    # 避免 bot 回覆自己的訊息
+    # 避免 bot 重複回應自己
     if message.author == client.user:
         return
 
-    # 搜尋訊息中是否有 x.com 連結
-    matches = x_url_pattern.findall(message.content)
-    if "x.com" in message.content:
-        # 替換成 vxtwitter.com
+    # 如果訊息包含 x.com
+    if "x.com" in message.content.lower():
         new_msg = message.content.replace("x.com", "vxtwitter.com")
         await message.channel.send(new_msg)
 
