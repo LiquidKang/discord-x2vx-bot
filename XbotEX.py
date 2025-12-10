@@ -10,6 +10,7 @@ if not TOKEN:
 # 設定 Intents
 intents = discord.Intents.default()
 intents.message_content = True  # 必須開啟，才能讀取訊息內容
+intents.messages = True  # 確保可以讀取和刪除訊息
 
 # 建立 Discord 客戶端
 client = discord.Client(intents=intents)
@@ -27,22 +28,24 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    # 如果訊息已有 embed，則不處理
-    if message.embeds:
-        return
-
     # 搜尋訊息是否含有 x.com 連結
-    matches = x_url_pattern.findall(message.content)
-    if matches:
+    if x_url_pattern.search(message.content):
         # 逐個替換 X.com 為 vxtwitter.com
         def replace_x(match):
             url = match.group(0)
             return url.replace("x.com", "vxtwitter.com")
         
         new_msg = x_url_pattern.sub(replace_x, message.content)
-        
-        # 以 reply 的方式發送，避免重複生成預覽
-        await message.reply(new_msg, mention_author=False)
+
+        try:
+            # 回覆 vxtwitter.com 連結
+            await message.reply(new_msg, mention_author=False)
+            # 刪除原本 X.com 訊息
+            await message.delete()
+        except discord.Forbidden:
+            print("缺少刪除訊息的權限，請確認 bot 具有管理訊息或刪除訊息權限")
+        except discord.HTTPException as e:
+            print(f"刪除訊息或回覆時發生錯誤: {e}")
 
 # 啟動 Bot
 client.run(TOKEN)
