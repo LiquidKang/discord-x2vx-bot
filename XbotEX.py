@@ -3,7 +3,6 @@ import re
 import os   # ← 你缺少這個，Railway 會直接爆掉
 
 TOKEN = os.getenv("TOKEN")
-client.run(TOKEN)
 
 intents = discord.Intents.default()
 intents.message_content = True  # 讀取訊息必須開啟
@@ -24,4 +23,5 @@ async def on_message(message):
         await message.channel.send(new_msg)
 
 client.run(TOKEN)
+
 
